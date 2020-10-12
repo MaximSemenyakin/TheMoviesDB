@@ -15,7 +15,7 @@ public class RetrofitInstance {
         if (retrofit == null) {
             retrofit = new Retrofit
                     .Builder()
-                    .baseUrl("https://api.themoviedb.org/3/")
+                    .baseUrl(BASE_URL)
                     .addConverterFactory(GsonConverterFactory.create())
                     .build();
         }
