@@ -3,8 +3,10 @@ package com.example.themoviesdb.view;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.paging.PagedList;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -16,6 +18,7 @@ import android.widget.AbsListView;
 
 import com.example.themoviesdb.R;
 import com.example.themoviesdb.adapter.ResultAdapter;
+import com.example.themoviesdb.databinding.ActivityMainBinding;
 import com.example.themoviesdb.model.MovieAPIResponse;
 import com.example.themoviesdb.model.Result;
 import com.example.themoviesdb.service.MovieAPIService;
@@ -32,19 +35,21 @@ import retrofit2.Retrofit;
 
 public class MainActivity extends AppCompatActivity {
 
-    private ArrayList<Result> resultArrayList;
+    private PagedList<Result> resultArrayList;
     private RecyclerView recyclerView;
     private ResultAdapter adapter;
     private SwipeRefreshLayout swipeRefreshLayout;
     private MainActivityViewModel mainActivityViewModel;
+    private ActivityMainBinding activityMainBinding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        activityMainBinding = DataBindingUtil.setContentView(this, R.layout.activity_main);
         mainActivityViewModel = new ViewModelProvider.AndroidViewModelFactory(getApplication()).create(MainActivityViewModel.class);
         getPopularMovies();
-        swipeRefreshLayout = findViewById(R.id.swiperefresh);
+        swipeRefreshLayout = activityMainBinding.swiperefresh;
         swipeRefreshLayout.setColorSchemeResources(R.color.colorPrimary);
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
@@ -55,18 +60,26 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void getPopularMovies() {
-        mainActivityViewModel.getAllMovieData().observe(this, new Observer<List<Result>>() {
+//        mainActivityViewModel.getAllMovieData().observe(this, new Observer<List<Result>>() {
+//            @Override
+//            public void onChanged(List<Result> results) {
+//                resultArrayList = (ArrayList<Result>) results;
+//                fillRecyclerView();
+//            }
+//        });
+        mainActivityViewModel.getPagedListLiveData().observe(this, new Observer<PagedList<Result>>() {
             @Override
-            public void onChanged(List<Result> results) {
-                resultArrayList = (ArrayList<Result>) results;
+            public void onChanged(PagedList<Result> results) {
+                resultArrayList = results;
                 fillRecyclerView();
             }
         });
     }
 
     private void fillRecyclerView() {
-        recyclerView = findViewById(R.id.recyclerView);
-        adapter = new ResultAdapter(this, resultArrayList);
+        recyclerView = activityMainBinding.recyclerView;
+        adapter = new ResultAdapter(this);
+        adapter.submitList(resultArrayList);
 
         if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
             recyclerView.setLayoutManager(new GridLayoutManager(this, 2));
